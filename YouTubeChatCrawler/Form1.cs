@@ -1,8 +1,11 @@
-﻿using System;
+﻿using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using static System.Windows.Forms.ListView;
 
 namespace YouTubeChatCrawler
 {
@@ -130,7 +133,67 @@ namespace YouTubeChatCrawler
 
 		private void Export_Click( object sender, EventArgs e )
 		{
-			// 엑셀로 추출
+			if ( CommentViewr.Items.Count <= 0 )
+			{
+				return;
+			}
+
+			SaveFileDialog saveFileDialog = new SaveFileDialog();
+			saveFileDialog.Title = "저장경로를 지정하세요.";
+			saveFileDialog.OverwritePrompt = true;
+			saveFileDialog.Filter = "csv (*.csv)|*.csv|모든파일(*.*)|*.*";
+			saveFileDialog.InitialDirectory = "C:\\";
+
+			string fileName = "Export";
+			if( saveFileDialog.ShowDialog() == DialogResult.OK )
+			{
+				fileName = saveFileDialog.FileName;
+
+				//https://blog.live2skull.kr/csharp/excel/csharp-excel-export/
+				FileInfo excelFile = new FileInfo( fileName );
+				if ( excelFile.Exists ) excelFile.Delete();
+
+				string[] sheets = new string[] { "데이터" };
+				ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+
+				using ( ExcelPackage excel = new ExcelPackage() )
+				{
+					excel.Workbook.Worksheets.Add( sheets[ 0 ] );
+
+					ExcelWorksheet sheet = excel.Workbook.Worksheets[ sheets[ 0 ] ];
+
+					List<object[]> dataRows = new List<object[]>();
+					for ( int i = 0; i < CommentViewr.Items.Count; ++i )
+					{
+						var thisItem = CommentViewr.Items[ i ];
+						int ColumnCount = thisItem.SubItems.Count;
+						object[] dataRow = new object[ ColumnCount ];
+
+						if ( i == 0 )
+						{
+							// 칼럼 헤더 추가
+							object[] HeaderRow = new object[ ColumnCount ];
+							for ( int columnCount = 0; columnCount < ColumnCount; ++columnCount )
+								HeaderRow[ columnCount ] = CommentViewr.Columns[ columnCount ].Text;
+
+							dataRows.Add( HeaderRow );
+						}
+
+						for ( int j = 0; j < ColumnCount; ++j )
+							dataRow[ j ] = thisItem.SubItems[ j ].Text;
+
+						dataRows.Add( dataRow );
+					}
+
+					string headerRange = String.Format( "B2:{0}2", Char.ConvertFromUtf32( CommentViewr.Items.Count + 64 ) );
+					sheet.Cells[ headerRange ].LoadFromArrays( dataRows );
+
+					excel.SaveAs( excelFile );
+				}
+
+				SuccesscsPopup popup = new SuccesscsPopup();
+				popup.ShowDialog();
+			}
 		}
 	}
 }
