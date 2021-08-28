@@ -28,12 +28,14 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.label1 = new System.Windows.Forms.Label();
 			this.VideoUrl = new System.Windows.Forms.TextBox();
 			this.SearchStart = new System.Windows.Forms.Button();
 			this.IsLive = new System.Windows.Forms.CheckBox();
 			this.CommentViewr = new System.Windows.Forms.ListView();
 			this.Export = new System.Windows.Forms.Button();
+			this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -95,6 +97,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
 			this.ClientSize = new System.Drawing.Size(800, 450);
 			this.Controls.Add(this.Export);
 			this.Controls.Add(this.CommentViewr);
@@ -102,6 +105,8 @@
 			this.Controls.Add(this.SearchStart);
 			this.Controls.Add(this.VideoUrl);
 			this.Controls.Add(this.label1);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+			this.MaximizeBox = false;
 			this.Name = "Form1";
 			this.Text = "Main";
 			this.ResumeLayout(false);
@@ -117,6 +122,7 @@
 		private System.Windows.Forms.CheckBox IsLive;
 		private System.Windows.Forms.Button Export;
 		private System.Windows.Forms.ListView CommentViewr;
+		private System.Windows.Forms.SaveFileDialog saveFileDialog1;
 	}
 }
 
