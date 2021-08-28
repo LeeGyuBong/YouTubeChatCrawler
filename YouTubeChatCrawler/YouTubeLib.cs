@@ -5,8 +5,6 @@ using Google.Apis.YouTube.v3.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -86,8 +84,6 @@ namespace YouTubeChatCrawler
 		{
 			var ret = Task.Run( async () =>
 			{
-				
-
 				UserCredential credential;
 				using ( var stream = new FileStream( "client_secret.json", FileMode.Open, FileAccess.Read ) )
 				{
@@ -112,7 +108,7 @@ namespace YouTubeChatCrawler
 		/// </summary>
 		public void GetComment( List<CommentInfo> commentList, string videoId, int no, string nextPageToken )
 		{
-			var request = youtubeService.CommentThreads.List( "snippet" );
+			var request = youtubeService.CommentThreads.List( "snippet, replies" );
 			request.VideoId = videoId;
 			request.Order = CommentThreadsResource.ListRequest.OrderEnum.Relevance;
 			request.TextFormat = CommentThreadsResource.ListRequest.TextFormatEnum.PlainText;
@@ -131,8 +127,30 @@ namespace YouTubeChatCrawler
 
 						string parentId = item.Snippet.TopLevelComment.Id;
 
-						if ( item.Snippet.TotalReplyCount > 0 )
-							GetReplyComment( commentList, parentId, no, 1, null );
+						long? TotalReplyCount = item.Snippet.TotalReplyCount;
+						if ( TotalReplyCount > 0 )
+						{
+							// Part Replies가 가져오는 코멘트 수는 5개
+							// 5개가 넘으면 Comment.list를 통해 재검색하여 모든 데이터를 가져와야함
+							if ( TotalReplyCount > 5 )
+							{
+								List<CommentInfo> repliesList = new List<CommentInfo>();
+								GetReplyComment( repliesList, parentId, no, 1, null );
+
+								repliesList.Sort( ( x, y ) => x.PublishedAt.CompareTo( y.PublishedAt ) );
+								commentList.AddRange( repliesList );
+							}
+							else
+							{
+								int cno = 1;
+								for ( int i = item.Replies.Comments.Count; i > 0; --i )
+								{
+									CommentInfo replie = new CommentInfo( no, cno, item.Replies.Comments[ i - 1 ] );
+									commentList.Add( replie );
+									cno++;
+								}
+							}
+						}
 
 						no++;
 					}
@@ -145,7 +163,7 @@ namespace YouTubeChatCrawler
 				if ( response.NextPageToken != null )
 					GetComment( commentList, videoId, no, response.NextPageToken );
 			}
-			catch( Exception e )
+			catch ( Exception e )
 			{
 				Console.WriteLine( "[GetComment] request.ExecuteAsync Error!(Message:{0}, Stack:{1})", e.Message, e.StackTrace );
 			}
@@ -158,12 +176,13 @@ namespace YouTubeChatCrawler
 		{
 			var request = youtubeService.Comments.List( "snippet" );
 			request.TextFormat = CommentsResource.ListRequest.TextFormatEnum.PlainText;
-			request.MaxResults = 50;
+			request.MaxResults = 100;
 			request.ParentId = parentId;
 			request.PageToken = nextPageToken;
 
 			var response = request.Execute();
 
+			cno = response.Items.Count;
 			foreach ( Comment item in response.Items )
 			{
 				try
@@ -171,7 +190,7 @@ namespace YouTubeChatCrawler
 					CommentInfo info = new CommentInfo( no, cno, item );
 					commentList.Add( info );
 
-					cno++;
+					cno--;
 				}
 				catch ( Exception e )
 				{
@@ -211,7 +230,7 @@ namespace YouTubeChatCrawler
 			request.MaxResults = 2000;
 
 			var response = request.Execute();
-			
+
 			foreach ( LiveChatMessage item in response.Items )
 			{
 				try

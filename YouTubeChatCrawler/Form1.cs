@@ -5,13 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using static System.Windows.Forms.ListView;
 
 namespace YouTubeChatCrawler
 {
 	public partial class Form1 : Form
 	{
-		Thread childThread = null;
+		private Thread childThread = null;
 
 		public Form1()
 		{
@@ -30,7 +29,7 @@ namespace YouTubeChatCrawler
 				return;
 			}
 
-			if( childThread != null )
+			if ( childThread != null )
 			{
 				childThread.Interrupt();
 				childThread.Join();
@@ -104,7 +103,7 @@ namespace YouTubeChatCrawler
 					nextToken = YouTubeLib.Instance.GetLiveMessage( commentInfos, liveChatId.ToString(), nextToken ).GetAwaiter().GetResult();
 
 					int totalCount = commentInfos.Count;
-					int i = 0; 
+					int i = 0;
 					foreach ( CommentInfo comment in commentInfos )
 					{
 						ListViewItem item = new ListViewItem( comment.AuthorName );
@@ -115,7 +114,7 @@ namespace YouTubeChatCrawler
 						CommentViewr.Invoke( new Action( () =>
 						{
 							CommentViewr.Items.Add( item );
-							if( totalCount == i )
+							if ( totalCount == i )
 								CommentViewr.TopItem = CommentViewr.Items[ CommentViewr.Items.Count - 1 ];
 						} ) );
 					}
@@ -145,7 +144,7 @@ namespace YouTubeChatCrawler
 			saveFileDialog.InitialDirectory = "C:\\";
 
 			string fileName = "Export";
-			if( saveFileDialog.ShowDialog() == DialogResult.OK )
+			if ( saveFileDialog.ShowDialog() == DialogResult.OK )
 			{
 				fileName = saveFileDialog.FileName;
 
@@ -153,14 +152,11 @@ namespace YouTubeChatCrawler
 				FileInfo excelFile = new FileInfo( fileName );
 				if ( excelFile.Exists ) excelFile.Delete();
 
-				string[] sheets = new string[] { "데이터" };
-				ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+				ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-				using ( ExcelPackage excel = new ExcelPackage() )
+				using ( ExcelPackage excel = new ExcelPackage( excelFile ) )
 				{
-					excel.Workbook.Worksheets.Add( sheets[ 0 ] );
-
-					ExcelWorksheet sheet = excel.Workbook.Worksheets[ sheets[ 0 ] ];
+					ExcelWorksheet sheet = excel.Workbook.Worksheets.Add( "Comment" );
 
 					List<object[]> dataRows = new List<object[]>();
 					for ( int i = 0; i < CommentViewr.Items.Count; ++i )
@@ -174,19 +170,12 @@ namespace YouTubeChatCrawler
 							// 칼럼 헤더 추가
 							object[] HeaderRow = new object[ ColumnCount ];
 							for ( int columnCount = 0; columnCount < ColumnCount; ++columnCount )
-								HeaderRow[ columnCount ] = CommentViewr.Columns[ columnCount ].Text;
-
-							dataRows.Add( HeaderRow );
+								sheet.Cells[ 1, columnCount + 1 ].Value = CommentViewr.Columns[ columnCount ].Text;
 						}
 
 						for ( int j = 0; j < ColumnCount; ++j )
-							dataRow[ j ] = thisItem.SubItems[ j ].Text;
-
-						dataRows.Add( dataRow );
+							sheet.Cells[ i + 2, j + 1 ].Value = thisItem.SubItems[ j ].Text;
 					}
-
-					string headerRange = String.Format( "B2:{0}2", Char.ConvertFromUtf32( CommentViewr.Items.Count + 64 ) );
-					sheet.Cells[ headerRange ].LoadFromArrays( dataRows );
 
 					excel.SaveAs( excelFile );
 				}
