@@ -10,45 +10,6 @@ using System.Threading.Tasks;
 
 namespace YouTubeChatCrawler
 {
-	public class CommentInfo
-	{
-		public int ParentNo;
-		public int ChildNo;
-		public string Text;
-		public long LikeCount;
-		public string AuthorName;
-		public DateTime PublishedAt;
-		public long ReplyCount;
-
-		public CommentInfo( int no, CommentThread thread )
-		{
-			ParentNo = no;
-			ChildNo = 0;
-			Text = thread.Snippet.TopLevelComment.Snippet.TextDisplay;
-			LikeCount = ( long )thread.Snippet.TopLevelComment.Snippet.LikeCount;
-			AuthorName = thread.Snippet.TopLevelComment.Snippet.AuthorDisplayName;
-			PublishedAt = DateTime.Parse( thread.Snippet.TopLevelComment.Snippet.PublishedAt.ToString() );
-			ReplyCount = ( long )thread.Snippet.TotalReplyCount;
-		}
-
-		public CommentInfo( int no, int cno, Comment thread )
-		{
-			ParentNo = no;
-			ChildNo = cno;
-			Text = thread.Snippet.TextDisplay;
-			LikeCount = ( long )thread.Snippet.LikeCount;
-			AuthorName = thread.Snippet.AuthorDisplayName;
-			PublishedAt = DateTime.Parse( thread.Snippet.PublishedAt.ToString() );
-		}
-
-		public CommentInfo( LiveChatMessage message )
-		{
-			Text = message.Snippet.TextMessageDetails.MessageText;
-			AuthorName = message.AuthorDetails.DisplayName;
-			PublishedAt = DateTime.Parse( message.Snippet.PublishedAt.ToString() );
-		}
-	}
-
 	public class YouTubeLib
 	{
 		#region Singleton
@@ -238,7 +199,7 @@ namespace YouTubeChatCrawler
 
 				await Task.Delay( ( int )response.PollingIntervalMillis );
 			}
-			catch( Exception e )
+			catch ( Exception e )
 			{
 				// TODO : 상세한 예외처리
 				//forbidden( 403 ) forbidden 지정된 라이브 채팅에 대한 메시지를 검색하는 데 필요한 권한이 없습니다.
