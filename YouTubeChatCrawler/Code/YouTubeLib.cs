@@ -60,7 +60,7 @@ namespace YouTubeChatCrawler
 				youtubeService = new YouTubeService( new BaseClientService.Initializer
 				{
 					ApplicationName = "YouTube_Chat_Crawler",
-					ApiKey = "AIzaSyAGGlRWhbhVbYgPQWEBzRoO18DjfndR4Is",
+					ApiKey = "",
 				} );
 			} );
 			ret.Wait();
